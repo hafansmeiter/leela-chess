@@ -996,16 +996,21 @@ std::vector<size_t> OpenCL::get_sgemm_tuners(void) {
     return tuners;
 }
 
-void OpenCL::initialize(const int channels, const std::vector<int> & gpus,
-                        bool silent) {
-    std::vector<cl::Platform> platforms;
+void OpenCL::getPlatforms() {
+	std::vector<cl::Platform> platforms = getPlatforms();
     try {
         cl::Platform::get(&platforms);
     } catch (const cl::Error &e) {
         myprintf("OpenCL: %s\n", e.what());
         throw;
     }
+	return platforms;
+}
 
+void OpenCL::initialize(const int channels, const std::vector<int> & gpus,
+                        bool silent) {
+    std::vector<cl::Platform> platforms = getPlatforms();
+ 
     auto best_version = 0.0f;
     cl::Platform best_platform;
     cl::Device best_device;

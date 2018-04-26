@@ -235,34 +235,14 @@ MoveList ChessBoard::GeneratePseudovalidMoves() const {
     if (rooks_.get(source)) {
       processed_piece = true;
       for (const auto& direction : kRookDirections) {
-        auto dst_row = source.row();
-        auto dst_col = source.col();
-        while (true) {
-          dst_row += direction.first;
-          dst_col += direction.second;
-          if (!BoardSquare::IsValid(dst_row, dst_col)) break;
-          const BoardSquare destination(dst_row, dst_col);
-          if (our_pieces_.get(destination)) break;
-          result.emplace_back(source, destination);
-          if (their_pieces_.get(destination)) break;
-        }
+        CheckDirection(source, direction, result);
       }
     }
     // Bishop (and queen)
     if (bishops_.get(source)) {
       processed_piece = true;
       for (const auto& direction : kBishopDirections) {
-        auto dst_row = source.row();
-        auto dst_col = source.col();
-        while (true) {
-          dst_row += direction.first;
-          dst_col += direction.second;
-          if (!BoardSquare::IsValid(dst_row, dst_col)) break;
-          const BoardSquare destination(dst_row, dst_col);
-          if (our_pieces_.get(destination)) break;
-          result.emplace_back(source, destination);
-          if (their_pieces_.get(destination)) break;
-        }
+        CheckDirection(source, direction, result);
       }
     }
     if (processed_piece) continue;
@@ -327,6 +307,23 @@ MoveList ChessBoard::GeneratePseudovalidMoves() const {
   }
   return result;
 }
+
+void ChessBoard::CheckDirection(const BitBoard &source, 
+	const std::pair<int, int> &direction, MoveList &result) {
+		
+	auto dst_row = source.row();
+	auto dst_col = source.col();
+	while (true) {
+	  dst_row += direction.first;
+	  dst_col += direction.second;
+	  if (!BoardSquare::IsValid(dst_row, dst_col)) break;
+	  const BoardSquare destination(dst_row, dst_col);
+	  if (our_pieces_.get(destination)) break;
+	  result.emplace_back(source, destination);
+	  if (their_pieces_.get(destination)) break;
+	}
+}
+	
 
 bool ChessBoard::ApplyMove(Move move) {
   const auto& from = move.from();

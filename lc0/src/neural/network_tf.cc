@@ -60,23 +60,30 @@ Output Ones(const Scope& scope, TensorShape shape) {
   return MakeVals(scope, shape, 1.0f);
 }
 
-Output MakeConvBlock(const Scope& scope, Input input, int channels,
-                     int input_channels, int output_channels,
+struct ChannelData {
+	Input input;
+	Output output;
+	int channels;
+	int input_channels;
+	int output_channels;
+};
+
+Output MakeConvBlock(const Scope& scope, ChannelData c,
                      const Weights::ConvBlock& weights,
                      Input* mixin = nullptr) {
   auto w_conv =
-      MakeConst(scope, {channels, channels, input_channels, output_channels},
+      MakeConst(scope, {c.channels, c.channels, c.input_channels, c.output_channels},
                 weights.weights, {3, 2, 0, 1});
 
   // auto b_conv = MakeConst(scope, {output_channels}, weights.biases);
-  auto conv2d = Conv2D(scope, input, w_conv, {1, 1, 1, 1}, "SAME",
+  auto conv2d = Conv2D(scope, c.input, w_conv, {1, 1, 1, 1}, "SAME",
                        Conv2D::DataFormat("NCHW"));
 
   auto batch_norm =
       FusedBatchNorm(scope, conv2d, Ones(scope, {output_channels}),
-                     Zeros(scope, {output_channels}),
-                     MakeConst(scope, {output_channels}, weights.bn_means),
-                     MakeConst(scope, {output_channels}, weights.bn_stddivs),
+                     Zeros(scope, {c.output_channels}),
+                     MakeConst(scope, {c.output_channels}, weights.bn_means),
+                     MakeConst(scope, {c.output_channels}, weights.bn_stddivs),
                      FusedBatchNorm::DataFormat("NCHW").IsTraining(false))
           .y;
 
